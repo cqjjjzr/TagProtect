@@ -30,6 +30,7 @@ public class TagProtect {
     private JButton btnSave;
     private JButton btnForceFix;
     private JCheckBox chbAuto;
+    private JCheckBox chbSlient;
     private TagListEdit dialog;
 
     private TagProtect(){
@@ -70,7 +71,7 @@ public class TagProtect {
         }*/ //测试代码.....
         btnForceFix.addActionListener(e -> {
             try {
-                fixTags();
+                fixTags(true);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -124,7 +125,7 @@ public class TagProtect {
                 lblStatus.setText("OK");
             }else if(code == 16006){
                 lblStatus.setText("av号不存在或者Tag被清了QwQ");
-                fixTags();
+                fixTags(false);
             }
         }else{
             lblStatus.setText("请求失败！" + connection.getResponseCode());
@@ -132,9 +133,9 @@ public class TagProtect {
         connection.disconnect();
     }
 
-    public void fixTags() throws Exception {
-        boolean isdo = false;
-        if(!chbAuto.isSelected()) isdo = JOptionPane.showConfirmDialog(null, "av号不存在或者Tag被清了QwQ，是否还原？", "Question", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
+    public void fixTags(boolean isdoi) throws Exception {
+        boolean isdo = isdoi;
+        if(!isdoi && !chbAuto.isSelected()) isdo = JOptionPane.showConfirmDialog(null, "av号不存在或者Tag被清了QwQ，是否还原？", "Question", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
         else isdo = true;
         if(isdo){
             for(String tag : list){
@@ -161,9 +162,11 @@ public class TagProtect {
                     JSONObject jsonObj = new JSONObject(jsonStr);
                     int code = jsonObj.getInt("code");
                     if(code == 0){
-                        JOptionPane.showMessageDialog(null, "成功添加Tag:" + tag, "Information", JOptionPane.INFORMATION_MESSAGE);
+                        if(chbSlient.isSelected()) JOptionPane.showMessageDialog(null, "成功添加Tag:" + tag, "Information", JOptionPane.INFORMATION_MESSAGE);
+                        lblStatus.setText("成功添加Tag:" + tag);
                     }else{
-                        JOptionPane.showMessageDialog(null, "添加Tag:" + tag + "失败，信息：" + jsonObj.getString("message"), "Error", JOptionPane.ERROR_MESSAGE);
+                        if(chbSlient.isSelected()) JOptionPane.showMessageDialog(null, "添加Tag:" + tag + "失败，信息：" + jsonObj.getString("message"), "Error", JOptionPane.ERROR_MESSAGE);
+                        lblStatus.setText("添加Tag:" + tag + "失败，信息：" + jsonObj.getString("message"));
                     }
                 }
                 out.close();
