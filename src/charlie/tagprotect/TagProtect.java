@@ -1,14 +1,20 @@
 package charlie.tagprotect;
 
+import org.apache.commons.io.FileUtils;
 import org.json.JSONObject;
 
 import javax.swing.*;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.file.*;
+import java.text.SimpleDateFormat;
+import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.prefs.Preferences;
 
@@ -18,6 +24,7 @@ public class TagProtect {
 
     private Preferences preferences = Preferences.userNodeForPackage(this.getClass());
     protected LinkedList<String> list = new LinkedList<>();
+    private static SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
 
     private JPanel pnlContent;
     private JTextField txtAid;
@@ -38,14 +45,13 @@ public class TagProtect {
         txtInternal.setText(preferences.get("internal", "10"));
         txtUID.setText(preferences.get("DedeUserID", ""));
         txtSessData.setText(preferences.get("SESSDATA", ""));
-        for(String tag : preferences.get("list", "").split(",")){
-            list.add(tag);
-        }
+        Collections.addAll(list, preferences.get("list", "").split(","));
         btnStart.addActionListener(e -> {
             btnStart.setEnabled(false);
             btnEditList.setEnabled(false);
             btnSave.setEnabled(false);
             new Thread(new TagChecker()).start();
+            log("Started on " + txtAid.getText());
         });
         btnSave.addActionListener(e -> {
             preferences.put("aid", txtAid.getText());
@@ -60,6 +66,8 @@ public class TagProtect {
             if(sb.length() > 0)
                 sb.substring(0, sb.length() - 1);
             preferences.put("list", sb.toString());
+            lblStatus.setText("已保存。");
+            log("Saved.");
         });
         btnEditList.addActionListener(e -> dialog.setVisible(true));
         dialog = new TagListEdit(this);
@@ -76,9 +84,11 @@ public class TagProtect {
                 ex.printStackTrace();
             }
         });
+        log("Started.");
     }
 
     public static void main(String[] args) {
+        log("Welcome to TagProtect by Charlie Jiang!");
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ignored) {}
@@ -98,12 +108,20 @@ public class TagProtect {
                     checkTag();
                 }
                 catch (NumberFormatException e){lblStatus.setText("间隔格式错误！仅能为纯数字");}
-                catch (Exception ex) {lblStatus.setText("Error:" + ex.toString());}
+                catch (Exception ex) {lblStatus.setText("Error:" + ex.toString()); log("Error:" + ex.toString());}
             }
         }
     }
 
-    public void checkTag() throws Exception {
+    public static void log(String msg){
+        try {
+            Path path = Paths.get("tagprotect.log");
+            if(!path.toFile().exists()) Files.createFile(path);
+            Files.write(Paths.get("tagprotect.log"), ("[" + format.format(new Date()) + "][TagProtect] " + msg + "\n").getBytes(), StandardOpenOption.APPEND);
+        } catch (IOException ignored) {}
+    }
+
+    private void checkTag() throws Exception {
         String url = TAG_REQ_ROOT + txtAid.getText();
         HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
         connection.connect();
@@ -123,6 +141,7 @@ public class TagProtect {
                 lblStatus.setText("av号格式错误！仅能为纯数字");
             }else if(code == 0){
                 lblStatus.setText("OK");
+                log("OK!" + jsonStr);
             }else if(code == 16006){
                 lblStatus.setText("av号不存在或者Tag被清了QwQ");
                 fixTags(false);
@@ -133,13 +152,12 @@ public class TagProtect {
         connection.disconnect();
     }
 
-    public void fixTags(boolean isdoi) throws Exception {
-        boolean isdo = isdoi;
-        if(!isdoi && !chbAuto.isSelected()) isdo = JOptionPane.showConfirmDialog(null, "av号不存在或者Tag被清了QwQ，是否还原？", "Question", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
-        else isdo = true;
-        if(isdo){
-            for(String tag : list){
-                if(tag.equals("")) continue;
+    private void fixTags(boolean isdoi) throws Exception {
+        boolean isdo;
+        isdo = !(!isdoi && !chbAuto.isSelected()) || JOptionPane.showConfirmDialog(null, "av号不存在或者Tag被清了QwQ，是否还原？", "Question", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
+        if (isdo) {
+            for (String tag : list) {
+                if (tag.equals("")) continue;
                 HttpURLConnection connection = (HttpURLConnection) new URL(TAG_ADD_URL).openConnection();
                 connection.setRequestMethod("POST");
                 connection.setRequestProperty("Cookie", "DedeUserID=" + txtUID.getText() + "; SESSDATA=" + txtSessData.getText());
@@ -150,23 +168,27 @@ public class TagProtect {
                 out.write("aid=" + URLEncoder.encode(txtAid.getText(), "UTF-8") + "&tag_name=" + URLEncoder.encode(tag, "UTF-8"));
                 out.flush();
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                if(connection.getResponseCode() == 200){
+                if (connection.getResponseCode() == 200) {
                     byte[] buf = new byte[128];
                     InputStream stream = connection.getInputStream();
                     int readLength;
-                    while((readLength = stream.read(buf)) != -1){
+                    while ((readLength = stream.read(buf)) != -1) {
                         outputStream.write(buf, 0, readLength);
                     }
                     stream.close();
                     String jsonStr = new String(outputStream.toByteArray());
                     JSONObject jsonObj = new JSONObject(jsonStr);
                     int code = jsonObj.getInt("code");
-                    if(code == 0){
-                        if(chbSlient.isSelected()) JOptionPane.showMessageDialog(null, "成功添加Tag:" + tag, "Information", JOptionPane.INFORMATION_MESSAGE);
+                    if (code == 0) {
+                        if (!chbSlient.isSelected())
+                            JOptionPane.showMessageDialog(null, "成功添加Tag:" + tag, "Information", JOptionPane.INFORMATION_MESSAGE);
                         lblStatus.setText("成功添加Tag:" + tag);
-                    }else{
-                        if(chbSlient.isSelected()) JOptionPane.showMessageDialog(null, "添加Tag:" + tag + "失败，信息：" + jsonObj.getString("message"), "Error", JOptionPane.ERROR_MESSAGE);
+                        log("Add successful:" + tag);
+                    } else {
+                        if (!chbSlient.isSelected())
+                            JOptionPane.showMessageDialog(null, "添加Tag:" + tag + "失败，信息：" + jsonObj.getString("message"), "Error", JOptionPane.ERROR_MESSAGE);
                         lblStatus.setText("添加Tag:" + tag + "失败，信息：" + jsonObj.getString("message"));
+                        log("Add failed:" + tag + " msg:" + jsonObj.getString("message"));
                     }
                 }
                 out.close();

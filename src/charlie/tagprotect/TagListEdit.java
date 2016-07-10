@@ -2,6 +2,7 @@ package charlie.tagprotect;
 
 import javax.swing.*;
 import java.awt.event.ActionListener;
+import java.nio.file.Paths;
 
 public class TagListEdit extends JDialog {
     private TagProtect parent;
@@ -55,5 +56,9 @@ public class TagListEdit extends JDialog {
 
     private void onOK() {
         dispose();
+    }
+
+    public static void main(String[] args) {
+        System.out.println(Paths.get("tagprotect.log").toAbsolutePath());
     }
 }
