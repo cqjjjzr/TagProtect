@@ -5,8 +5,6 @@ import java.awt.event.ActionListener;
 import java.nio.file.Paths;
 
 public class TagListEdit extends JDialog {
-    private TagProtect parent;
-
     private JPanel contentPane;
     private JButton buttonOK;
     private JList<String> lstTags;
@@ -14,7 +12,6 @@ public class TagListEdit extends JDialog {
     private JButton btnRemove;
 
     public TagListEdit(TagProtect parent) {
-        this.parent = parent;
         setContentPane(contentPane);
         setModal(true);
         getRootPane().setDefaultButton(buttonOK);

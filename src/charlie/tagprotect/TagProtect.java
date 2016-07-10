@@ -1,6 +1,5 @@
 package charlie.tagprotect;
 
-import org.apache.commons.io.FileUtils;
 import org.json.JSONObject;
 
 import javax.swing.*;
@@ -11,7 +10,11 @@ import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.nio.file.*;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
@@ -113,11 +116,11 @@ public class TagProtect {
         }
     }
 
-    public static void log(String msg){
+    private static void log(String msg){
         try {
             Path path = Paths.get("tagprotect.log");
             if(!path.toFile().exists()) Files.createFile(path);
-            Files.write(Paths.get("tagprotect.log"), ("[" + format.format(new Date()) + "][TagProtect] " + msg + "\n").getBytes(), StandardOpenOption.APPEND);
+            Files.write(Paths.get("tagprotect.log"), ("[" + format.format(new Date()) + "][TagProtect] " + msg + "\n").getBytes(Charset.forName("UTF-8")), StandardOpenOption.APPEND);
         } catch (IOException ignored) {}
     }
 
