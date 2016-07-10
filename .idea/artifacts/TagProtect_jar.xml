@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="TagProtect:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/TagProtect_jar</output-path>
+    <root id="archive" name="TagProtect.jar">
+      <element id="module-output" name="TagProtect" />
+      <element id="extracted-dir" path="E:/org.json/json-20160212.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
