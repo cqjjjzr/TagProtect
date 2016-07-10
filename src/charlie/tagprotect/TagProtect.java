@@ -144,7 +144,7 @@ public class TagProtect {
                 lblStatus.setText("av号格式错误！仅能为纯数字");
             }else if(code == 0){
                 lblStatus.setText("OK");
-                log("OK!" + jsonStr);
+                //log("OK!" + jsonStr);
             }else if(code == 16006){
                 lblStatus.setText("av号不存在或者Tag被清了QwQ");
                 fixTags(false);
