@@ -163,9 +163,7 @@ public class TagProtect {
         for(int i = 0;i < array.length();i++){
             JSONObject obj = array.getJSONObject(i);
             String tagName = obj.getString("tag_name");
-            if(list.contains(tagName)){
-                sum++;
-            }
+            for(String tag : list) if(tag.equalsIgnoreCase(tagName)) sum++;
         }
         if(sum < list.size()) fixTags(false);
     }
