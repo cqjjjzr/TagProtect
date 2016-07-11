@@ -1,5 +1,6 @@
 package charlie.tagprotect;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import javax.swing.*;
@@ -145,6 +146,7 @@ public class TagProtect {
             }else if(code == 0){
                 lblStatus.setText("OK");
                 //log("OK!" + jsonStr);
+                checkFull(jsonObj);
             }else if(code == 16006){
                 lblStatus.setText("av号不存在或者Tag被清了QwQ");
                 fixTags(false);
@@ -153,6 +155,19 @@ public class TagProtect {
             lblStatus.setText("请求失败！" + connection.getResponseCode());
         }
         connection.disconnect();
+    }
+
+    private void checkFull(JSONObject jsonObj) throws Exception {
+        JSONArray array = jsonObj.getJSONArray("data");
+        int sum = 0;
+        for(int i = 0;i < array.length();i++){
+            JSONObject obj = array.getJSONObject(i);
+            String tagName = obj.getString("tag_name");
+            if(list.contains(tagName)){
+                sum++;
+            }
+        }
+        if(sum < list.size()) fixTags(false);
     }
 
     private void fixTags(boolean isdoi) throws Exception {
