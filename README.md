@@ -17,4 +17,4 @@ function GetAllCookie(){var aCookie = document.cookie.split("; ");for (var i=0; 
 回车，然后输入GetAllCookie(),你会得到两个数组对吧，格式大概是["SESSDATA", "xxxxxxxxxx"]，把后面xxxxxxxxxx的内容复制到相应的位置（DedeUserID复制到DedeUserID里面，SESSDATA同理），OK。
 
 ##已知问题
-只有Tags被清空的时候才会触发修复...下版本解析一下返回的tags来处理一下吧....
+~~只有Tags被清空的时候才会触发修复...下版本解析一下返回的tags来处理一下吧....~~已修复
